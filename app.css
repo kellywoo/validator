@@ -12,13 +12,16 @@ dl, dt, dd, ul, li, p {
   margin: 0;
   padding: 0;
 }
-.desc {
+article {
   background-color: #f4f4f4;
   padding: 20px;
 }
-.parameters {
-}
+.description {
 
+}
+.description > p {
+  margin-top: 20px;
+}
 .code {
   font-size: 16px;
   line-height: 1.7;
@@ -95,8 +98,14 @@ input:focus,
 select:focus,
 textarea:focus {
   border-bottom: 1px solid #46d1f0;
-
 }
+
+input.is-error,
+select.is-error,
+textarea.is-error {
+  border-bottom: 1px solid crimson;
+}
+
 input[type=checkbox],
 input[type=radio] {
   width: auto;
@@ -112,6 +121,7 @@ input[type=radio] {
   margin: 0 0 5px;
   color: #444;
   font-size: 0.9em;
+  font-weight: bold;
 }
 .input-inline::after {
   content: ' ';
@@ -162,7 +172,7 @@ input[type=radio] {
   color: #666;
 }
 .examples {
-  max-width: 600px;
+  max-width: 800px;
   margin: 50px auto;
   border: 1px solid #587c9a;
   border-radius: 5px;
@@ -172,4 +182,41 @@ input[type=radio] {
   padding: 0 0 20px;
   margin: 0;
   text-transform: uppercase;
+}
+
+.tab-button {
+  border-bottom: 2px solid #eee;
+  margin-bottom: 40px;
+}
+.tab-button::after {
+  content: ' ';
+  display: block;
+  clear: both;
+}
+.tab-button > li {
+  width: 33.33%;
+  float: left;
+  display: block;
+}
+.tab-content > div {
+  display: none;
+}
+.btn-tab {
+  display: block;
+  text-decoration: none;
+  padding: 10px;
+  text-align: center;
+  color: #232;
+}
+.tab-button >.is-active::after {
+  content: ' ';
+  display: block;
+  height: 2px;
+  width: 100%;
+  background-color: #41b883;
+  margin-bottom: -2px;
+}
+
+.examples .sym-required::before {
+  content: '*';
 }
