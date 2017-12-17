@@ -486,17 +486,28 @@ default = {
       </dl>
       <h3>Methods</h3>
       <dl class="depth1">
-        <dt><span class="param-name">Validator.addRule</span><span class="param-type">function</span></dt>
+        <dt><span class="param-name">Validator.setValue</span><span class="param-type">function:void</span></dt>
+        <dd>set Value to the Element and run the validate method
+          <dl class="depth2">
+            <dt>value<span class="param-type">any</span></dt>
+            <dd>value to change</dd>
+          </dl>
+          <dl class="depth2">
+            <dt>value<span class="param-type">any</span></dt>
+            <dd>value to change</dd>
+          </dl>
+        </dd>
+        <dt><span class="param-name">Validator.addRule</span><span class="param-type">function:void</span></dt>
         <dd>add a rulename to apply to Validator instance</dd>
-        <dt><span class="param-name">Validator.removeRule</span><span class="param-type">function</span></dt>
+        <dt><span class="param-name">Validator.removeRule</span><span class="param-type">function:coid</span></dt>
         <dd>remove a rulename to apply to Validator instance</dd>
-        <dt><span class="param-name">Validator.showMessage</span><span class="param-type">function</span></dt>
+        <dt><span class="param-name">Validator.showMessage</span><span class="param-type">function:void</span></dt>
         <dd>receive string(error message) and display it to msgbox</dd>
-        <dt><span class="param-name">Validator.showMsgBox</span><span class="param-type">function</span></dt>
+        <dt><span class="param-name">Validator.showMsgBox</span><span class="param-type">function:void</span></dt>
         <dd>display block to Validator.$msgBox</dd>
-        <dt><span class="param-name">Validator.hideMsgBox</span><span class="param-type">function</span></dt>
+        <dt><span class="param-name">Validator.hideMsgBox</span><span class="param-type">function:void</span></dt>
         <dd>display none to Validator.$msgBox</dd>
-        <dt><span class="param-name">Validator.remove</span><span class="param-type">function</span></dt>
+        <dt><span class="param-name">Validator.remove</span><span class="param-type">function:void</span></dt>
         <dd>remove Validator instance and eventlisteners</dd>
       </dl>
     </div>
@@ -933,9 +944,12 @@ var a = $vv.init(document.querySelector('.ex2-b'), {
               }, 2000)
             }
 
-            var btnObserve = document.querySelector('.observe-all')
+            var btnObserve = document.querySelector('.observe-all');
+            btnObserve.addEventListener('click',function () {
+              b.reset();
+              alert('unchecked radio button');
+            }, false)
             $vv.observeAll(a, b, c, d, function (r, a, b, c, d) {
-              console.log(arguments);
               if ( r ) {
                 btnObserve.disabled = false;
               } else {
@@ -1031,7 +1045,6 @@ var c = $vv.init('.c', {
 var d = $vv.init('.d', {
   rules: [ 'required' ]
 })
-console.log(d.valid)
 //reactive validate
 
 function suffice () {
@@ -1045,7 +1058,13 @@ function suffice () {
   }, 2000)
 }
 
-var btnObserve = document.querySelector('.observe-all')
+var btnObserve = document.querySelector('.observe-all');
+
+btnObserve.addEventListener('click',function () {
+  b.reset();
+  alert('unchecked radio button');
+}, false);
+
 $vv.observeAll(a, b, c, d, function (r, a, b, c, d) {
   console.log(arguments);
   if ( r ) {

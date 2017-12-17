@@ -284,10 +284,37 @@
 
   function changeValue (self, value) {
     // no value returned from formatter or value doesn't concern key events;
-    if ( isUndef(value) ) {
+    if ( !self || isUndef(value) ) {
       return;
     }
-    self.$el.value = value;
+    if ( isRadio(self.type) ) {
+      var checked;
+      self.$groups.filter(function (v) {
+        if ( v.value === value ) {
+          v.checked = true;
+          checked = v;
+          return true;
+        } else if ( v.checked ) {
+          checked = v;
+        }
+        return false;
+      }).length ? void(0) :checked.checked = false;
+
+    } else if ( this.type === 'select' ) {
+      var options = [].slice.call(self.$el.querySelectorAll('option'));
+      if ( isOneOf(options, '') ) {
+        self.$el.value = ''
+      } else {
+        self.$el.value = options[ 0 ].value;
+      }
+    } else if ( isCheckBox(self.type) ) {
+      if(value === 'true' || value === 'false' ) {
+        value = Boolean(value)
+      }
+      self.$el.checked = !!value;
+    } else {
+      self.$el.value = value;
+    }
   }
 
   function getValue (self) {
@@ -524,7 +551,7 @@
       sortRequiredFirst(this.rules);
     }
   }
-
+ // user purposely remove all the rules, it's their choice, don't block it
   Validator.prototype.removeRule = function (rule) {
     if ( isString(rule) ) {
       if ( this.rules.hasOwnProperty(rule) ) {
@@ -561,26 +588,13 @@
       }
     }
   }
-
+  //errorsToShow : regardless
+  Validator.prototype.setValue = function (value, errorsToShow) {
+    changeValue(this, value);
+    this.validate(errorsToShow);
+  }
   Validator.prototype.reset = function () {
-    if ( isRadio(this.type) ) {
-      this.$groups.forEach(function (v) {
-        if ( v.checked ) {
-          v.checked = false;
-        }
-      })
-    } else if ( this.type === 'select' ) {
-      var options = [].slice.call(this.$el.querySelectorAll('option'));
-      if ( isOneOf(options, '') ) {
-        this.$el.value = ''
-      } else {
-        this.$el.value = options[ 0 ].value;
-      }
-    } else if ( isCheckBox(this.type) ) {
-      this.$el.checked = false;
-    } else {
-      this.$el.value = '';
-    }
+    changeValue(this, '');
     this.dirty = false;
     this.touched = false;
     _getErrors.call(this)
