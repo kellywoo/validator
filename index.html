@@ -6,28 +6,32 @@
   <script>
     var ONLOAD = [];
 
-    ONLOAD.push(function(){
+    ONLOAD.push(function () {
       var slice = [].slice;
+
       function contains (el, cl) {
         return el.classList.contains(cl);
       }
+
       function addClass (el, cl) {
         el.classList.add(cl);
       }
+
       function removeClass (el, cl) {
         el.classList.remove(cl);
       }
-      function findParent(el, cl){
+
+      function findParent (el, cl) {
 
         var parent = el.parentNode;
-        if( parent === document) {
+        if ( parent === document ) {
           return null;
         }
-        if( typeof cl === 'string') {
+        if ( typeof cl === 'string' ) {
 
-          if(/^#/.test(cl)) {
+          if ( /^#/.test(cl) ) {
             return parent.id === cl.split(1) ? parent : findParent(parent, cl)
-          } else if(/^\./.test(cl)) {
+          } else if ( /^\./.test(cl) ) {
             return contains(parent, cl.split(1)) ? parent : findParent(parent, cl)
           } else {
             console.warn('only support id and class')
@@ -36,25 +40,26 @@
           return parent;
         }
       }
-      var ACTIVE='is-active';
+
+      var ACTIVE = 'is-active';
       var tabs = slice.call(document.querySelectorAll('.examples'));
-      tabs.forEach(function(tab,i){
+      tabs.forEach(function (tab, i) {
         var active = 0;
         var box = tab;
         var tabs = slice.call(box.querySelector('.tab-button').children);
         var contents = slice.call(box.querySelector('.tab-content').children);
-        addClass(tabs[active],ACTIVE);
-        contents[active].style.display = 'block';
-        tab.addEventListener('click',function(e) {
-          if(contains(e.target, 'btn-tab')) {
+        addClass(tabs[ active ], ACTIVE);
+        contents[ active ].style.display = 'block';
+        tab.addEventListener('click', function (e) {
+          if ( contains(e.target, 'btn-tab') ) {
             e.preventDefault();
             var el = e.target;
             var idx = tabs.indexOf(el.parentNode);
 
-            addClass(tabs[idx],ACTIVE);
-            removeClass(tabs[active],ACTIVE);
-            contents[idx].style.display = 'block';
-            contents[active].style.display = 'none';
+            addClass(tabs[ idx ], ACTIVE);
+            removeClass(tabs[ active ], ACTIVE);
+            contents[ idx ].style.display = 'block';
+            contents[ active ].style.display = 'none';
             active = idx;
           }
         })
@@ -64,522 +69,78 @@
   <link rel="stylesheet" href="./app.css">
 </head>
 <body>
-<h1>Validator</h1>
-<p>for ie9 or above</p>
-<p>if you have any problem, let me know at <a href="mailto:kelly.kh.woo@gmail.com">kelly.kh.woo@gmail.com</a></p>
-<section>
-  <h2>download</h2>
-  <article>
-    <div class="code">
-      <code>
-        <pre class="prettyprint lang-js">
-const $vv = require('path_to_$vv')
-//$vv.init  => return Validator Instance
-//$vv.addRule
-//$vv.dictionary
-//$vv.isValidAll
-//$vv.validateAll
-//$vv.observeAll</pre>
-      </code>
-    </div>
-    <a href="https://kellywoo.github.io/validator/index.js" target="_blank"
-       style="margin-top:20px;color:#41b883;display: block;text-align: center">click to download</a>
-  </article>
-</section>
-<section>
-  <h2>$vv.init</h2>
-  <article>
-    <div class="code">
-      <code>
-          <pre class="prettyprint lang-js">
-//$vv.init(element, options)
-
-  let input = $vv.init('.a', {
-    rules: [ 'required', 'password',
-            {
-              'confirm': validatorInstance,
-              'minLen': 4
-              //object can include parameters
-            } ],
-    msgBox: domObject,
-    display: function(errors){
-      // this refers to Validator Object
-    },
-    formatter: function(value) {
-    },
-    event: 'change'
-  });</pre>
-      </code>
-    </div>
-    <div class="description">
-      <p>init method returns Validator Instance</p>
-      <dl class="depth1">
-        <dt><span class="param-name">element</span><span class="param-type">string || element</span><span
-          class="sym-required"></span></dt>
-        <dd>object for input and select, or queryselector expression</dd>
-        <dt><span class="param-name">options</span><span class="param-type">object</span><span
-          class="sym-required"></span></dt>
-        <dd>event, applying rules, name, callbacks for new Validator Object</dd>
-        <dd>
-          <dl class="depth2">
-            <dt><span class="param-name">rules</span><span
-              class="param-type">string || Object</span><span class="sym-required"></span></dt>
-            <dd>the value of input, if a validator rule needs param, use Object and pass data<br/>
-              defined order matters.<br/>
-              <strong>(ex)</strong>
-              rules: ['a', 'b', {
-              c : dataObj,
-              d : 'dataString'
-              }]
-            </dd>
-            <dt><span class="param-name">msgBox</span><span class="param-type">string || element</span><span
-              class="sym-optional"></span></dt>
-            <dd>where the error message to be displayed in, in case of string is provided, it computes with
-              document.querySelector,<br/>If it is not provided, Validator constructor will make a element for the
-              error message and append it to the input's parent
-            </dd>
-            <dt><span class="param-name">display</span><span class="param-type">function:void</span><span
-              class="sym-optional"></span></dt>
-            <dd>
-              set new display function for the instance.
-              <br/>'this' binds to Validator Object in the function.
-              <br/>since default one displays only first errors, in case editing error messages or do other stuff, it
-              would be perfect.<br/>
-              argument errors has rule name and error message from dictionary and to display these to msgBox, call
-              this.showMessages(errorMessage);
-              <dl class="depth2">
-                <dt><span class="param-name">errors</span><span class="param-type">&lt;Array(2),Array(2)...&gt;</span>
-                </dt>
-                <dd>errors object<br/>
-                  error[0]: rulename<br/>
-                  error[1]: error message<br/>
-                  [](empty array) for no errors
-                </dd>
-              </dl>
-            </dd>
-            <dt><span class="param-name">formatter</span><span class="param-type">function:string</span><span
-              class="sym-optional"></span></dt>
-            <dd>
-              change value and apply to DOM, input events bound for texting input and mousedown for radio,
-              checkbox, range, select<br/>
-              it runs before validating rules<br/>
-              ex) 1234 => 1,234
-              <dl class="depth2">
-                <dt><span class="param-name">value</span><span class="param-type">string || number || boolean </span>
-                </dt>
-                <dd>presented dom value <br/> number for type of range, number<br/>
-                  boolean for checkbox, string for the reset
-                </dd>
-              </dl>
-            </dd>
-            <dt><span class="param-name">event</span><span class="param-type">string</span><span
-              class="sym-optional"></span></dt>
-            <dd>
-              event to attach validate handler for text inputs (excludes radio, range, checkbox,select) <br/>
-              default is 'change' and default can be set by using config
-            </dd>
-          </dl>
-        </dd>
-        <!--<dt><span class="param-name">args</span><span class="param-type">any</span><span class="sym-optional"></span>-->
-        <!--</dt>-->
-        <!--<dd>array made with arguments provided when Validate object was created except element and options</dd>-->
-      </dl>
-    </div>
-
-  </article>
-</section>
-<section>
-  <h2>$vv.addRule</h2>
-  <article>
-    <div class="code">
-      <code>
-          <pre class="prettyprint lang-js">
-var validateRule = function(value, args) {
- //this binds to Validator Object
-  return boolean
-}
-
-//how to add rules
-$vv.addRule(name, validateRule, errMessage)
-
-//multiple
-$vv.addRule({name1: validateRule1,
-  name2: validateRule2,
-  name3: validateRule3})</pre>
-      </code>
-    </div>
-    <div class="description">
-      <p>addRule adds global rules, is able to pass multiple rules as an object
-        and in this case can't put messages together</p>
-      <dl class="depth1">
-        <dt><span class="param-name">name</span><span class="param-type">string</span><span
-          class="sym-required"></span></dt>
-        <dd>the name of the rule</dd>
-        <dt><span class="param-name">validateRule</span><span class="param-type">function: boolean</span><span
-          class="sym-required"></span></dt>
-        <dd>validate rule</dd>
-        <dd>
-          <dl class="depth2">
-            <dt><span class="param-name">value</span><span class="param-type">string||number||boolean</span></dt>
-            <dd>the value of input<br/>
-              range : number<br/>
-              checkbox : boolean checked<br/>
-              radio : string value of checked item<br/>
-              the rest are string
-            </dd>
-            <dt><span class="param-name">args</span><span class="param-type">array&lt;any&gt;</span></dt>
-            <dd>array made with arguments provided when Validate object was created except element and option</dd>
-          </dl>
-        </dd>
-        <dt><span class="param-name">errMessage</span><span class="param-type">string || function: string</span></dt>
-        <dd>error message can be string or function returns string<br/>
-          see below to Add Error Message
-        </dd>
-      </dl>
-    </div>
-
-  </article>
-</section>
-<section>
-  <h2>$vv.dictionary</h2>
-  <article>
-    <div class="code">
-      <code>
-          <pre class="prettyprint lang-js">
-var returnMessageFn = function(rulename, dictionary) {
-  return 'error message to be displayed';
-}
-var returnMessageStr ='error message can be string data';
-var errMessage = returnMessageFn || returnMessageStr;
-
-//how to add error message
-$vv.dictionary(name, errMessage)
-
-//also multiple can be applied by passing object of messages
-$vv.dictionary({name1: errMessage1,
-            name2: errMessage2,
-            name3: errMessage3})</pre>
-      </code>
-    </div>
-    <div class="description">
-      <p>dictionary adds global errorMessages and error message can be string or function returning string.
-        <br/>is able to pass multiple messages as an object</p>
-      <dl class="depth1">
-        <dt><span class="param-name">name</span><span class="param-type">string</span><span
-          class="sym-required"></span></dt>
-        <dd>the name of the message(same as rules)</dd>
-        <dt><span class="param-name">errMessage</span><span class="param-type">function: string || string</span><span
-          class="sym-required"></span></dt>
-        <dd>The error message to be shown when error occurred or function returns that error message</dd>
-      </dl>
-    </div>
-
-  </article>
-</section>
-<section>
-  <h2>$vv.isValidAll</h2>
-  <article>
-    <div class="code">
-      <code>
-          <pre class="prettyprint lang-js">
-var a = $vv.init(...)
-var b = $vv.init(...)
-var btn = document.querySelector('button')
-
-btn.addEventListener('click',function(){
-  if($vv.isValidAll(a,b)) {
-    ...
-  }
-}, false)
-</pre>
-      </code>
-    </div>
-    <div class="description">
-      <p>isValidAll doesn't provoke error messages <br/>
-        it simply returns the value in form of boolean</p>
-      <dl class="depth1">
-        <dt><span class="param-name">parameters</span><span class="param-type">Validator Instances</span><span
-          class="sym-required"></span></dt>
-        <dd>Validator instance to validate together</dd>
-        <dt><span class="param-name">return</span><span class="param-type">boolean</span><span
-          class="sym-required"></span></dt>
-        <dd>simply return true or false</dd>
-      </dl>
-    </div>
-
-  </article>
-</section>
-<section>
-  <h2>$vv.validateAll</h2>
-  <article>
-    <div class="code">
-      <code>
-          <pre class="prettyprint lang-js">
-var a = $vv.init(...)
-var b = $vv.init(...)
-var btn = document.querySelector('button')
-
-btn.addEventListener('click',function(){
-  var valid = $vv.validateAll(a,b)
-  // return true if no error found from the group, array of erred Validator instance if error found in case need some ui mutation
-  // so use '===' instead of  '==' to check its validity
-
-  if( valid === true ) {
-   ...
-  } else {
-   ...
-  }
-}, false)
-</pre>
-      </code>
-    </div>
-    <div class="description">
-      <p>it provokes all the error messages regardless its dirty or touched status</p>
-      <dl class="depth1">
-        <dt><span class="param-name">parameters</span><span class="param-type">Validator Instances</span><span
-          class="sym-required"></span></dt>
-        <dd>Validator instance to validate together</dd>
-        <dt><span class="param-name">return</span><span class="param-type">Boolean(true) || Array</span><span
-          class="sym-required"></span></dt>
-        <dd>
-          returned value from validateAll is a bit tricky<br/>
-          return true if no error found from the group, array of erred Validator instance if error found in case need
-          some ui mutation
-        </dd>
-      </dl>
-    </div>
-
-  </article>
-</section>
-<section>
-  <h2>$vv.observeAll</h2>
-  <article>
-    <div class="code">
-      <code>
-          <pre class="prettyprint lang-js">
-var a = $vv.init(...)
-var b = $vv.init(...)
-var btn = document.querySelector('button')
-
-$vv.observeAll(a,b, function(valid) {
-  if(valid) {
-    btn.classList.add('btn-red')
-  } else {
-    btn.classList.remove('btn-red')
-  }
-})
-</pre>
-      </code>
-    </div>
-    <div class="description">
-      <p>observeAll does reactive work to its validator instances' value<br/>
-        take one function to call when value changes, <br/>
-        can be used for UI mutation</p>
-      <dl class="depth1">
-        <dt><span class="param-name">parameters</span><span class="param-type">Validator Instances</span><span
-          class="sym-required"></span></dt>
-        <dd>Validator instance to validate together</dd>
-        <dt><span class="param-name">return</span><span class="param-type">boolean</span><span
-          class="sym-required"></span></dt>
-        <dd>return true for all valid, false for other cases</dd>
-      </dl>
-    </div>
-
-  </article>
-</section>
-<section>
-  <h2>$vv.config</h2>
-  <article>
-    <div class="code">
-      <code>
-          <pre class="prettyprint lang-js">
-//default config object
-default = {
-    boxClass: 'msg-box', // msg-box class, no padding, no styling should be applied
-    msgClass: 'msg-box-msg', // div inside msg-box
-    errorClass: 'is-error',
-    addClass: true,
-    waiver: 'dirty',
-    event: 'change',
-    //_config.countBlank:false => uncount errors(except required) when string is ''
-    getDefaultMsg: function (rule) {
-      return rule + ' : entered wrong'
-    },
-    display: function (errors) {
-    // override function to display error message
-
-    }
-  }
- $vv.config({event:'input',countBlank:true....})
-</pre>
-      </code>
-    </div>
-    <div class="description">
-      <dl class="depth1">
-        <dt><span class="param-name">boxClass</span><span class="param-type">string</span><span
-          class="sym-required"></span></dt>
-        <dd>className for wrapper of message box</dd>
-        <dt><span class="param-name">msgClass</span><span class="param-type">string</span><span
-          class="sym-required"></span></dt>
-        <dd>className for the Validator.$msgBox</dd>
-        <dt><span class="param-name">errorClass</span><span class="param-type">string</span><span
-          class="sym-required"></span></dt>
-        <dd>className for the Validator.$el when error occurred</dd>
-        <dt><span class="param-name">addClass</span><span class="param-type">boolean</span><span
-          class="sym-required"></span></dt>
-        <dd>whether to add errorClass or not</dd>
-        <dt><span class="param-name">waiver</span><span class="param-type">string</span><span
-          class="sym-required"></span></dt>
-        <dd>option is 'dirty' or 'touched'<br/>
-          'dirty' for not showing error message before key(text input) or mousedown(not text input) event<br/>
-          'touched' for focus event
-        </dd>
-        <dt><span class="param-name">event</span><span class="param-type">string</span><span
-          class="sym-required"></span></dt>
-        <dd>change validate event for all Validator to be created</dd>
-        <dt><span class="param-name">display</span><span class="param-type">function</span><span
-          class="sym-required"></span></dt>
-        <dd>change display function for all validator to be created
-          <dl class="depth2">
-            <dt><span class="param-name">errors</span><span class="param-type">Array</span></dt>
-            <dd>errors object<br/>
-              error[0]: rulename<br/>
-              error[1]: error message<br/>
-              [](empty array) for no errors
-            </dd>
-          </dl>
-        </dd>
-      </dl>
-    </div>
-
-  </article>
-</section>
-<section>
-  <h2>Validator constructor</h2>
-  <article>
-    <div class="description">
-      <h3>Properties</h3>
-      <dl class="depth1" style="margin-bottom: 50px">
-        <dt><span class="param-name">Validator.$el</span><span class="param-type">element</span></dt>
-        <dd>Element object to be validated(only input and select)</dd>
-        <dt><span class="param-name">Validator.$msgBox</span><span class="param-type">element</span></dt>
-        <dd>Element object to display error message</dd>
-        <dt><span class="param-name">Validator.dirty</span><span class="param-type">boolean</span></dt>
-        <dd><span class="fc-strong">mousedown</span> for checkbox, radio, range, <span class="fc-strong">input</span>
-          for the rest<br/>
-          true for the case event has been occurred and false for the other
-        </dd>
-        <dt><span class="param-name">Validator.touched</span><span class="param-type">boolean</span></dt>
-        <dd><span class="fc-strong">focus</span><br/>
-          true for the case event has been occurred and false for the other
-        </dd>
-        <dt><span class="param-name">Validator.pure</span><span class="param-type">boolean</span></dt>
-        <dd>opposite of dirty</dd>
-        <dt><span class="param-name">Validator.untouched</span><span class="param-type">boolean</span></dt>
-        <dd>opposite of touched</dd>
-        <dt><span class="param-name">Validator.failed</span><span class="param-type">boolean</span></dt>
-        <dd>error happened</dd>
-        <dt><span class="param-name">Validator.success</span><span class="param-type">boolean</span></dt>
-        <dd>passed all rules</dd>
-        <dt><span class="param-name">Validator.extra</span><span class="param-type">&lt;any&gt;</span></dt>
-        <dd>Array of the arguments[2] to [end] added when init method called</dd>
-      </dl>
-      <h3>Methods</h3>
-      <dl class="depth1">
-        <dt><span class="param-name">Validator.setValue</span><span class="param-type">function:void</span></dt>
-        <dd>set Value to the Element and run the validate method
-          <dl class="depth2">
-            <dt>value<span class="param-type">any</span></dt>
-            <dd>value to change</dd>
-          </dl>
-          <dl class="depth2">
-            <dt>value<span class="param-type">any</span></dt>
-            <dd>value to change</dd>
-          </dl>
-        </dd>
-        <dt><span class="param-name">Validator.addRule</span><span class="param-type">function:void</span></dt>
-        <dd>add a rulename to apply to Validator instance</dd>
-        <dt><span class="param-name">Validator.removeRule</span><span class="param-type">function:coid</span></dt>
-        <dd>remove a rulename to apply to Validator instance</dd>
-        <dt><span class="param-name">Validator.showMessage</span><span class="param-type">function:void</span></dt>
-        <dd>receive string(error message) and display it to msgbox</dd>
-        <dt><span class="param-name">Validator.showMsgBox</span><span class="param-type">function:void</span></dt>
-        <dd>display block to Validator.$msgBox</dd>
-        <dt><span class="param-name">Validator.hideMsgBox</span><span class="param-type">function:void</span></dt>
-        <dd>display none to Validator.$msgBox</dd>
-        <dt><span class="param-name">Validator.remove</span><span class="param-type">function:void</span></dt>
-        <dd>remove Validator instance and eventlisteners</dd>
-      </dl>
-    </div>
-  </article>
-</section>
-<section>
-  <div class="examples">
-    <h4>default rules</h4>
-    <ul class="tab-button">
-      <li><a href="" class="btn-tab">DEMO</a></li>
-      <li><a href="" class="btn-tab">HTML</a></li>
-      <li><a href="" class="btn-tab">SCRIPT</a></li>
-    </ul>
-    <div class="tab-content">
-      <div>
-        <label class="input-row">
-          <span class="input-label">required<span class="sym-required"></span></span>
-          <p><input type="text" class="ex0-a"></p>
-        </label>
-        <label class="input-row">
-          <span class="input-label">email</span>
-          <p><input type="text" class="ex0-b"></p>
-        </label>
-        <label class="input-row">
-          <span class="input-label">password</span>
-          <p><input type="text" class="ex0-c"></p>
-        </label>
-        <label class="input-row">
-          <span class="input-label">minLen</span>
-          <p><input type="text" class="ex0-d"></p>
-        </label>
-        <label class="input-row">
-          <span class="input-label">maxLen</span>
-          <p><input type="text" class="ex0-e"></p>
-        </label>
-        <label class="input-row">
-          <span class="input-label">minNum</span>
-          <p><input type="number" class="ex0-f"></p>
-        </label>
-        <label class="input-row">
-          <span class="input-label">maxNum</span>
-          <p><input type="number" class="ex0-g"></p>
-        </label>
-        <script>
-          ONLOAD.push(function () {
-            var a = $vv.init('.ex0-a', {
-              rules: [ 'required'],
-              event: 'input'
+<div class="wrapper">
+  <h1>Validator</h1>
+  <p>for ie9 or above</p>
+  <p>all password input are replaced with text input for visual check</p>
+  <p>if you have any problem, let me know at <a href="mailto:kelly.kh.woo@gmail.com">kelly.kh.woo@gmail.com</a></p>
+  <section>
+    <div class="examples">
+      <h4>default rules</h4>
+      <ul class="tab-button">
+        <li><a href="" class="btn-tab">DEMO</a></li>
+        <li><a href="" class="btn-tab">HTML</a></li>
+        <li><a href="" class="btn-tab">SCRIPT</a></li>
+      </ul>
+      <div class="tab-content">
+        <div>
+          <label class="input-row">
+            <span class="input-label">required(always first to validate)<span class="sym-required"></span></span>
+            <p><input type="text" class="ex0-a"></p>
+          </label>
+          <label class="input-row">
+            <span class="input-label">email</span>
+            <p><input type="text" class="ex0-b"></p>
+          </label>
+          <label class="input-row">
+            <span class="input-label">password(8 to 12, upper,lower,special charater, digits)</span>
+            <p><input type="text" class="ex0-c"></p>
+          </label>
+          <label class="input-row">
+            <span class="input-label">minLen(set to 10)</span>
+            <p><input type="text" class="ex0-d"></p>
+          </label>
+          <label class="input-row">
+            <span class="input-label">maxLen(set to 5)</span>
+            <p><input type="text" class="ex0-e"></p>
+          </label>
+          <label class="input-row">
+            <span class="input-label">minNum(set to 3000)</span>
+            <p><input type="number" class="ex0-f"></p>
+          </label>
+          <label class="input-row">
+            <span class="input-label">maxNum(set to 10)</span>
+            <p><input type="number" class="ex0-g"></p>
+          </label>
+          <script>
+            ONLOAD.push(function () {
+              var a = $vv.init('.ex0-a', {
+                rules: [ 'required' ],
+                event: 'input'
+              })
+              var b = $vv.init('.ex0-b', {
+                rules: [ 'email' ]
+              })
+              var c = $vv.init('.ex0-c', {
+                rules: [ 'password' ]
+              })
+              var d = $vv.init('.ex0-d', {
+                rules: [ { minLen: 10 } ]
+              })
+              var e = $vv.init('.ex0-e', {
+                rules: [ { maxLen: 5 } ]
+              })
+              var f = $vv.init('.ex0-f', {
+                rules: [ { minNum: 3000 } ]
+              })
+              var g = $vv.init('.ex0-g', {
+                rules: [ { maxNum: 10 } ]
+              })
             })
-            var b = $vv.init('.ex0-b', {
-              rules: [ 'email' ]
-            })
-            var c = $vv.init('.ex0-c', {
-              rules: [ 'password' ]
-            })
-            var d = $vv.init('.ex0-d', {
-              rules: [ {minLen: 10} ]
-            })
-            var e = $vv.init('.ex0-e', {
-              rules: [ {maxLen: 5} ]
-            })
-            var f = $vv.init('.ex0-f', {
-              rules: [ {minNum: 3000} ]
-            })
-            var g = $vv.init('.ex0-g', {
-              rules: [ {maxNum: 50} ]
-            })
-          })
-        </script>
-      </div>
-      <div>
-        <code>
+          </script>
+        </div>
+        <div>
+          <code>
           <pre class="prettyprint lang-html">
 &lt;label class="input-row"&gt;
   &lt;span class="input-label"&gt;required
@@ -611,10 +172,10 @@ default = {
   &lt;p&gt;&lt;input type="number" class="ex0-g"&gt;&lt;/p&gt;
 &lt;/label&gt;
           </pre>
-        </code>
-      </div>
-      <div>
-        <code>
+          </code>
+        </div>
+        <div>
+          <code>
           <pre class="prettyprint lang-js">
 var a = $vv.init('.ex0-a', {
   rules: [ 'required'],
@@ -639,90 +200,89 @@ var g = $vv.init('.ex0-g', {
   rules: [ {maxNum: 50} ]
 })
           </pre>
-        </code>
+          </code>
+        </div>
       </div>
     </div>
-  </div>
-
-  <div class="examples">
-    <h4>password(type is text to show inputs)</h4>
-    <ul class="tab-button">
-      <li><a href="" class="btn-tab">DEMO</a></li>
-      <li><a href="" class="btn-tab">HTML</a></li>
-      <li><a href="" class="btn-tab">SCRIPT</a></li>
-    </ul>
-    <div class="tab-content">
-      <div>
-        <label class="input-row">
-          <span class="input-label">custom password</span>
-          <p><input type="text" class="ex1-a"></p>
-        </label>
-        <label class="input-row">
-          <span class="input-label">confirm</span>
-          <p><input type="text" class="ex1-b"></p>
-        </label>
-        <script>
-          ONLOAD.push(function () {
-            $vv.addRule({
-              pwHasLower: function (value) {
-                return /[a-z]/.test(value)
-              },
-              pwHasUpper: function (value) {
-                return /[A-Z]/.test(value)
-              },
-              pwHasDigit: function (value) {
-                return /[0-9]/.test(value)
-              },
-              pwHasSpecial: function (value) {
-                return /[@$!%*?&#+\-_]/.test(value)
-              }
-            })
-            $vv.dictionary({
-              pwHasLower: 'LowerCase',
-              pwHasUpper: 'UpperCase',
-              pwHasDigit: 'Digits',
-              pwHasSpecial: 'Special Character(@$!%*?&#+-_)'
-            })
-            var a = $vv.init('.ex1-a', {
-              rules: [ 'required', 'pwHasLower', 'pwHasUpper', 'pwHasDigit', 'pwHasSpecial', {
-                minLen: 8,
-                maxLen: 14
-              } ],
-
-              event: 'input',
-              display: function (errors) {
-
-                var str = '';
-                if ( errors.length ) {
-                  var err = errors.reduce(function (p, c) {
-                    if ( /^pwH/.test(c[ 0 ]) ) {
-                      p[ 0 ].push(c)
-                    } else {
-                      p[ 1 ].push(c)
-                    }
-                    return p
-                  }, [ [], [] ]);
-                  str = err[ 0 ].length ? '<p>it needs ' + err[ 0 ].reduce(function (p, v) {
-                      p.push('<strong>' + v[ 1 ] + '</strong>');
-                      return p;
-                    }, []).join(', ') + '</p>' : '';
-                  str += err[ 1 ].map(function (v) {
-                    return '<p>' + v[ 1 ] + '</p>';
-                  }).join('');
+    <div class="examples">
+      <h4>Cusome password Rule</h4>
+      <ul class="tab-button">
+        <li><a href="" class="btn-tab">DEMO</a></li>
+        <li><a href="" class="btn-tab">HTML</a></li>
+        <li><a href="" class="btn-tab">SCRIPT</a></li>
+      </ul>
+      <div class="tab-content">
+        <div>
+          <label class="input-row">
+            <span class="input-label">password</span>
+            <p><input type="text" class="ex1-a"></p>
+          </label>
+          <label class="input-row">
+            <span class="input-label">confirm</span>
+            <p><input type="text" class="ex1-b"></p>
+          </label>
+          <script>
+            ONLOAD.push(function () {
+              $vv.addRule({
+                pwHasLower: function (value) {
+                  return /[a-z]/.test(value)
+                },
+                pwHasUpper: function (value) {
+                  return /[A-Z]/.test(value)
+                },
+                pwHasDigit: function (value) {
+                  return /[0-9]/.test(value)
+                },
+                pwHasSpecial: function (value) {
+                  return /[@$!%*?&#+\-_]/.test(value)
                 }
-                this.showMessage(str);
-              }
+              })
+              $vv.dictionary({
+                pwHasLower: 'LowerCase',
+                pwHasUpper: 'UpperCase',
+                pwHasDigit: 'Digits',
+                pwHasSpecial: 'Special Character(@$!%*?&#+-_)'
+              })
+              var a = $vv.init('.ex1-a', {
+                rules: [ 'required', 'pwHasLower', 'pwHasUpper', 'pwHasDigit', 'pwHasSpecial', {
+                  minLen: 8,
+                  maxLen: 14
+                } ],
+
+                event: 'input',
+                display: function (errors) {
+
+                  var str = '';
+                  if ( errors.length ) {
+                    var err = errors.reduce(function (p, c) {
+                      if ( /^pwH/.test(c[ 0 ]) ) {
+                        p[ 0 ].push(c)
+                      } else {
+                        p[ 1 ].push(c)
+                      }
+                      return p
+                    }, [ [], [] ]);
+                    str = err[ 0 ].length ? '<p>it needs ' + err[ 0 ].reduce(function (p, v) {
+                        p.push('<strong>' + v[ 1 ] + '</strong>');
+                        return p;
+                      }, []).join(', ') + '</p>' : '';
+                    str += err[ 1 ].map(function (v) {
+                      return '<p>' + v[ 1 ] + '</p>';
+                    }).join('');
+                  }
+                  this.showMessage(str);
+                }
+              })
+              var b = $vv.init('.ex1-b', {
+                rules: [ {
+                  'confirm': a
+                } ]
+              })
             })
-            var b = $vv.init('.ex1-b', {
-              rules: [ {
-                'confirm': a
-              } ]
-            })
-          })
-        </script>
-      </div>
-      <div>
-        <code>
+          </script>
+        </div>
+        <div>
+          <code>
           <pre class="prettyprint lang-html">
 &lt;label class="input-row"&gt;
   &lt;span class="input-label"&gt;custom password&lt;/span&gt;
@@ -733,10 +293,10 @@ var g = $vv.init('.ex0-g', {
   &lt;p&gt;&lt;input type="text" class="ex1-b"&gt;&lt;/p&gt;
 &lt;/label&gt;
           </pre>
-        </code>
-      </div>
-      <div>
-        <code>
+          </code>
+        </div>
+        <div>
+          <code>
           <pre class="prettyprint lang-js">
 $vv.addRule({
   pwHasLower: function (value) {
@@ -794,46 +354,46 @@ var b = $vv.init('.ex1-b', {
   } ]
 })
           </pre>
-        </code>
+          </code>
+        </div>
       </div>
     </div>
-  </div>
-  <div class="examples">
-    <h4>formatter</h4>
-    <ul class="tab-button">
-      <li><a href="" class="btn-tab">DEMO</a></li>
-      <li><a href="" class="btn-tab">HTML</a></li>
-      <li><a href="" class="btn-tab">SCRIPT</a></li>
-    </ul>
-    <div class="tab-content">
-      <div>
-        <label class="input-row">
-          <span class="input-label">number(Float, Int) only</span>
-          <p><input type="text" class="ex2-a"></p>
-        </label>
-        <label class="input-row">
-          <span class="input-label">add comma after 3 digits (like cash)</span>
-          <p><input type="text" class="ex2-b"></p>
-        </label>
-        <script>
-          ONLOAD.push(function () {
-            var a = $vv.init(document.querySelector('.ex2-a'), {
-              rules: [ 'required', { minNum: 200 } ],
-              formatter: function (value) {
-                return value.replace(/(^0(?!\.)|[^\d.])/g, '').replace(/^(\d+\.\d*)(\.)$/, '$1') || 0;
-              }
+    <div class="examples">
+      <h4>formatter</h4>
+      <ul class="tab-button">
+        <li><a href="" class="btn-tab">DEMO</a></li>
+        <li><a href="" class="btn-tab">HTML</a></li>
+        <li><a href="" class="btn-tab">SCRIPT</a></li>
+      </ul>
+      <div class="tab-content">
+        <div>
+          <label class="input-row">
+            <span class="input-label">number(Float, Int) only</span>
+            <p><input type="text" class="ex2-a"></p>
+          </label>
+          <label class="input-row">
+            <span class="input-label">add comma after 3 digits (like cash)</span>
+            <p><input type="text" class="ex2-b"></p>
+          </label>
+          <script>
+            ONLOAD.push(function () {
+              var a = $vv.init(document.querySelector('.ex2-a'), {
+                rules: [ 'required', { minNum: 200 } ],
+                formatter: function (value) {
+                  return value.replace(/(^0(?!\.)|[^\d.])/g, '').replace(/^(\d+\.\d*)(\.)$/, '$1') || 0;
+                }
+              })
+              var a = $vv.init(document.querySelector('.ex2-b'), {
+                rules: [ 'required', { minNum: 1000 } ],
+                formatter: function (value) {
+                  return value.replace(/\D|^0/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',') || 0;
+                }
+              })
             })
-            var a = $vv.init(document.querySelector('.ex2-b'), {
-              rules: [ 'required', { minNum: 1000 } ],
-              formatter: function (value) {
-                return value.replace(/\D|^0/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, ',') || 0;
-              }
-            })
-          })
-        </script>
-      </div>
-      <div>
-        <code>
+          </script>
+        </div>
+        <div>
+          <code>
           <pre class="prettyprint lang-html">
 &lt;label class="input-row"&gt;
   &lt;span class="input-label"&gt;number(Float, Int) only&lt;/span&gt;
@@ -844,10 +404,10 @@ var b = $vv.init('.ex1-b', {
   &lt;p&gt;&lt;input type="text" class="ex2-b"&gt;&lt;/p&gt;
 &lt;/label&gt;
           </pre>
-        </code>
-      </div>
-      <div>
-        <code>
+          </code>
+        </div>
+        <div>
+          <code>
           <pre class="prettyprint lang-js">
 var a = $vv.init(document.querySelector('.ex2-a'), {
   rules: [ 'required', { minNum: 200 } ],
@@ -862,130 +422,130 @@ var a = $vv.init(document.querySelector('.ex2-b'), {
   }
 })
           </pre>
-        </code>
-      </div>
-    </div>
-
-  </div>
-  <div class="examples">
-    <h4>validateAll observeAll</h4>
-    <ul class="tab-button">
-      <li><a href="" class="btn-tab">DEMO</a></li>
-      <li><a href="" class="btn-tab">HTML</a></li>
-      <li><a href="" class="btn-tab">SCRIPT</a></li>
-    </ul>
-    <div class="tab-content">
-      <div>
-        <label class="input-row">
-          <span class="input-label">basic text<span class="sym-required"></span></span>
-          <input type="text" class="a">
-        </label>
-        <dl class="input-row">
-          <dt class="input-label">radio<span class="sym-required"></span></dt>
-          <dd class="input-inline col3">
-            <label class="input-row"><input type="radio" name="hey" class="b"><span
-              class="input-label-inline">radio1</span></label>
-            <label class="input-row"><input type="radio" name="hey" class="b1"><span
-              class="input-label-inline">radio2</span></label>
-            <label class="input-row"><input type="radio" name="hey" class="b2"><span
-              class="input-label-inline">radio3</span>
-            </label>
-            <div id="radioMsg" class="msg-box"></div>
-          </dd>
-        </dl>
-        <label class="input-row">
-          <span class="input-label">select<span class="sym-required"></span></span>
-          <select class="c">
-            <option value="">default</option>
-            <option value="hey">ddd</option>
-          </select>
-        </label>
-        <label class="input-row">
-          <span class="input-label">checkbox<span class="sym-required"></span></span>
-          <input type="checkbox" class="d"><span class="input-label-inline">check please</span>
-        </label>
-        <div style="text-align: center;padding: 30px 0 0">
-          <button type="button" class="validate-all btn-green">ValidateAll</button>
-          <button type="button" disabled class="observe-all btn-green">ObserveAll</button>
+          </code>
         </div>
-        <script>
-          ONLOAD.push(function () {
-            var a = $vv.init('.a', {
-              rules: [ 'required' ],
-              formatter: function (value) {
-                console.log(value);
-                // return value;
-              }
-            });
-            var b = $vv.init('.b', {
-              rules: [ 'required' ],
-              msgBox: document.querySelector('#radioMsg')
-            })
-            var c = $vv.init('.c', {
-              rules: [ 'required' ],
-              formatter: function (value) {
-                return value;
-              }
-            })
-            var d = $vv.init('.d', {
-              rules: [ 'required' ]
-            })
-            console.log(d.valid)
-            //reactive validate
-
-            function suffice () {
-              this.removeEventListener('click', suffice, false);
-              this.classList.add('btn-processing');
-              var $this = this
-              setTimeout(function () {
-                alert('Thank you for the submit');
-                $vv.resetAll(a, b, c, d);
-                $this.classList.remove('btn-processing')
-              }, 2000)
-            }
-
-            var btnObserve = document.querySelector('.observe-all');
-            btnObserve.addEventListener('click',function () {
-              b.reset();
-              alert('unchecked radio button');
-            }, false)
-            $vv.observeAll(a, b, c, d, function (r, a, b, c, d) {
-              if ( r ) {
-                btnObserve.disabled = false;
-              } else {
-                btnObserve.disabled = true;
-              }
-            })
-
-
-            //manual validate
-            var btnValidate = document.querySelector('.validate-all');
-            btnValidate.addEventListener('click', validateForm, false)
-            var isValidating = false;
-
-            function validateForm (e) {
-              if ( isValidating ) {
-                return;
-              }
-              var valid = $vv.validateAll(a, b, c, d);
-              if ( valid === true ) {
-                isValidating = true;
-                btnValidate.classList.add('btn-processing');
-                setTimeout(function () {
-                  alert('thank you for the submit');
-                  $vv.resetAll.bind(null, a, b, c, d);
-                  btnValidate.classList.remove('btn-processing');
-                  isValidating = false;
-                }, 2000)
-              } else {
-                valid[ 0 ].$el.focus();
-              }
-            }
-          })
-        </script>
       </div>
-      <div>
-        <code>
+
+    </div>
+    <div class="examples">
+      <h4>validateAll observeAll</h4>
+      <ul class="tab-button">
+        <li><a href="" class="btn-tab">DEMO</a></li>
+        <li><a href="" class="btn-tab">HTML</a></li>
+        <li><a href="" class="btn-tab">SCRIPT</a></li>
+      </ul>
+      <div class="tab-content">
+        <div>
+          <label class="input-row">
+            <span class="input-label">basic text<span class="sym-required"></span></span>
+            <input type="text" class="a">
+          </label>
+          <dl class="input-row">
+            <dt class="input-label">radio<span class="sym-required"></span></dt>
+            <dd class="input-inline col3">
+              <label class="input-row"><input type="radio" name="hey" class="b"><span
+                class="input-label-inline">radio1</span></label>
+              <label class="input-row"><input type="radio" name="hey" class="b1"><span
+                class="input-label-inline">radio2</span></label>
+              <label class="input-row"><input type="radio" name="hey" class="b2"><span
+                class="input-label-inline">radio3</span>
+              </label>
+              <div id="radioMsg" class="msg-box"></div>
+            </dd>
+          </dl>
+          <label class="input-row">
+            <span class="input-label">select<span class="sym-required"></span></span>
+            <select class="c">
+              <option value="">default</option>
+              <option value="hey">ddd</option>
+            </select>
+          </label>
+          <label class="input-row">
+            <span class="input-label">checkbox<span class="sym-required"></span></span>
+            <input type="checkbox" class="d"><span class="input-label-inline">check please</span>
+          </label>
+          <div style="text-align: center;padding: 30px 0 0">
+            <button type="button" class="validate-all btn-green">ValidateAll</button>
+            <button type="button" disabled class="observe-all btn-green">ObserveAll</button>
+          </div>
+          <script>
+            ONLOAD.push(function () {
+              var a = $vv.init('.a', {
+                rules: [ 'required' ],
+                formatter: function (value) {
+                  console.log(value);
+                  // return value;
+                }
+              });
+              var b = $vv.init('.b', {
+                rules: [ 'required' ],
+                msgBox: document.querySelector('#radioMsg')
+              })
+              var c = $vv.init('.c', {
+                rules: [ 'required' ],
+                formatter: function (value) {
+                  return value;
+                }
+              })
+              var d = $vv.init('.d', {
+                rules: [ 'required' ]
+              })
+              console.log(d.valid)
+              //reactive validate
+
+              function suffice () {
+                this.removeEventListener('click', suffice, false);
+                this.classList.add('btn-processing');
+                var $this = this
+                setTimeout(function () {
+                  alert('Thank you for the submit');
+                  $vv.resetAll(a, b, c, d);
+                  $this.classList.remove('btn-processing')
+                }, 2000)
+              }
+
+              var btnObserve = document.querySelector('.observe-all');
+              btnObserve.addEventListener('click', function () {
+                b.reset();
+                alert('unchecked radio button');
+              }, false)
+              $vv.observeAll(a, b, c, d, function (r, a, b, c, d) {
+                if ( r ) {
+                  btnObserve.disabled = false;
+                } else {
+                  btnObserve.disabled = true;
+                }
+              })
+
+
+              //manual validate
+              var btnValidate = document.querySelector('.validate-all');
+              btnValidate.addEventListener('click', validateForm, false)
+              var isValidating = false;
+
+              function validateForm (e) {
+                if ( isValidating ) {
+                  return;
+                }
+                var valid = $vv.validateAll(a, b, c, d);
+                if ( valid === true ) {
+                  isValidating = true;
+                  btnValidate.classList.add('btn-processing');
+                  setTimeout(function () {
+                    alert('thank you for the submit');
+                    $vv.resetAll.bind(null, a, b, c, d);
+                    btnValidate.classList.remove('btn-processing');
+                    isValidating = false;
+                  }, 2000)
+                } else {
+                  valid[ 0 ].$el.focus();
+                }
+              }
+            })
+          </script>
+        </div>
+        <div>
+          <code>
           <pre class="prettyprint lang-html">
 &lt;label class="input-row"&gt;
   &lt;span class="input-label"&gt;basic text&lt;span class="sym-required"&gt;&lt;/span&gt;&lt;/span&gt;
@@ -1020,10 +580,10 @@ var a = $vv.init(document.querySelector('.ex2-b'), {
   &lt;button type="button" disabled class="observe-all btn-green"&gt;ObserveAll&lt;/button&gt;
 &lt;/div&gt;
           </pre>
-        </code>
-      </div>
-      <div>
-        <code>
+          </code>
+        </div>
+        <div>
+          <code>
           <pre class="prettyprint lang-js">
 var a = $vv.init('.a', {
   rules: [ 'required' ],
@@ -1099,19 +659,471 @@ function validateForm (e) {
   }
 }
           </pre>
-        </code>
+          </code>
+        </div>
       </div>
     </div>
-  </div>
-</section>
-<script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
-<script src="./index.js"></script>
-<script>
-  window.onload = function () {
-    ONLOAD.forEach(function (fn) {
-      fn();
-    })
+  </section>
+
+  <section>
+    <h2>download</h2>
+    <article>
+      <div class="code">
+        <code>
+        <pre class="prettyprint lang-js">
+const $vv = require('path_to_$vv')
+//$vv.init  => return Validator Instance
+//$vv.addRule
+//$vv.dictionary
+//$vv.isValidAll
+//$vv.validateAll
+//$vv.observeAll</pre>
+        </code>
+      </div>
+      <a href="https://kellywoo.github.io/validator/index.js" target="_blank"
+         style="margin-top:20px;color:#41b883;display: block;text-align: center">click to download</a>
+    </article>
+  </section>
+  <section>
+    <h2>$vv.init</h2>
+    <article>
+      <div class="code">
+        <code>
+          <pre class="prettyprint lang-js">
+//$vv.init(element, options)
+
+  let input = $vv.init('.a', {
+    rules: [ 'required', 'password',
+            {
+              'confirm': validatorInstance,
+              'minLen': 4
+              //object can include parameters
+            } ],
+    msgBox: domObject,
+    display: function(errors){
+      // this refers to Validator Object
+    },
+    formatter: function(value) {
+    },
+    event: 'change'
+  });</pre>
+        </code>
+      </div>
+      <div class="description">
+        <p>init method returns Validator Instance</p>
+        <dl class="depth1">
+          <dt><span class="param-name">element</span><span class="param-type">string || element</span><span
+            class="sym-required"></span></dt>
+          <dd>object for input and select, or queryselector expression</dd>
+          <dt><span class="param-name">options</span><span class="param-type">object</span><span
+            class="sym-required"></span></dt>
+          <dd>event, applying rules, name, callbacks for new Validator Object</dd>
+          <dd>
+            <dl class="depth2">
+              <dt><span class="param-name">rules</span><span
+                class="param-type">string || Object</span><span class="sym-required"></span></dt>
+              <dd>the value of input, if a validator rule needs param, use Object and pass data<br/>
+                defined order matters.<br/>
+                <strong>(ex)</strong>
+                rules: ['a', 'b', {
+                c : dataObj,
+                d : 'dataString'
+                }]
+              </dd>
+              <dt><span class="param-name">msgBox</span><span class="param-type">string || element</span><span
+                class="sym-optional"></span></dt>
+              <dd>where the error message to be displayed in, in case of string is provided, it computes with
+                document.querySelector,<br/>If it is not provided, Validator constructor will make a element for the
+                error message and append it to the input's parent
+              </dd>
+              <dt><span class="param-name">display</span><span class="param-type">function:void</span><span
+                class="sym-optional"></span></dt>
+              <dd>
+                set new display function for the instance.
+                <br/>'this' binds to Validator Object in the function.
+                <br/>since default one displays only first errors, in case editing error messages or do other stuff, it
+                would be perfect.<br/>
+                argument errors has rule name and error message from dictionary and to display these to msgBox, call
+                this.showMessages(errorMessage);
+                <dl class="depth2">
+                  <dt><span class="param-name">errors</span><span class="param-type">&lt;Array(2),Array(2)...&gt;</span>
+                  </dt>
+                  <dd>errors object<br/>
+                    error[0]: rulename<br/>
+                    error[1]: error message<br/>
+                    [](empty array) for no errors
+                  </dd>
+                </dl>
+              </dd>
+              <dt><span class="param-name">formatter</span><span class="param-type">function:string</span><span
+                class="sym-optional"></span></dt>
+              <dd>
+                change value and apply to DOM, input events bound for texting input and mousedown for radio,
+                checkbox, range, select<br/>
+                it runs before validating rules<br/>
+                ex) 1234 => 1,234
+                <dl class="depth2">
+                  <dt><span class="param-name">value</span><span class="param-type">string || number || boolean </span>
+                  </dt>
+                  <dd>presented dom value <br/> number for type of range, number<br/>
+                    boolean for checkbox, string for the reset
+                  </dd>
+                </dl>
+              </dd>
+              <dt><span class="param-name">event</span><span class="param-type">string</span><span
+                class="sym-optional"></span></dt>
+              <dd>
+                event to attach validate handler for text inputs (excludes radio, range, checkbox,select) <br/>
+                default is 'change' and default can be set by using config
+              </dd>
+            </dl>
+          </dd>
+          <!--<dt><span class="param-name">args</span><span class="param-type">any</span><span class="sym-optional"></span>-->
+          <!--</dt>-->
+          <!--<dd>array made with arguments provided when Validate object was created except element and options</dd>-->
+        </dl>
+      </div>
+
+    </article>
+  </section>
+  <section>
+    <h2>$vv.addRule</h2>
+    <article>
+      <div class="code">
+        <code>
+          <pre class="prettyprint lang-js">
+var validateRule = function(value, args) {
+ //this binds to Validator Object
+  return boolean
+}
+
+//how to add rules
+$vv.addRule(name, validateRule, errMessage)
+
+//multiple
+$vv.addRule({name1: validateRule1,
+  name2: validateRule2,
+  name3: validateRule3})</pre>
+        </code>
+      </div>
+      <div class="description">
+        <p>addRule adds global rules, is able to pass multiple rules as an object
+          and in this case can't put messages together</p>
+        <dl class="depth1">
+          <dt><span class="param-name">name</span><span class="param-type">string</span><span
+            class="sym-required"></span></dt>
+          <dd>the name of the rule</dd>
+          <dt><span class="param-name">validateRule</span><span class="param-type">function: boolean</span><span
+            class="sym-required"></span></dt>
+          <dd>validate rule</dd>
+          <dd>
+            <dl class="depth2">
+              <dt><span class="param-name">value</span><span class="param-type">string||number||boolean</span></dt>
+              <dd>the value of input<br/>
+                range : number<br/>
+                checkbox : boolean checked<br/>
+                radio : string value of checked item<br/>
+                the rest are string
+              </dd>
+              <dt><span class="param-name">args</span><span class="param-type">array&lt;any&gt;</span></dt>
+              <dd>array made with arguments provided when Validate object was created except element and option</dd>
+            </dl>
+          </dd>
+          <dt><span class="param-name">errMessage</span><span class="param-type">string || function: string</span></dt>
+          <dd>error message can be string or function returns string<br/>
+            see below to Add Error Message
+          </dd>
+        </dl>
+      </div>
+
+    </article>
+  </section>
+  <section>
+    <h2>$vv.dictionary</h2>
+    <article>
+      <div class="code">
+        <code>
+          <pre class="prettyprint lang-js">
+var returnMessageFn = function(rulename, dictionary) {
+  return 'error message to be displayed';
+}
+var returnMessageStr ='error message can be string data';
+var errMessage = returnMessageFn || returnMessageStr;
+
+//how to add error message
+$vv.dictionary(name, errMessage)
+
+//also multiple can be applied by passing object of messages
+$vv.dictionary({name1: errMessage1,
+            name2: errMessage2,
+            name3: errMessage3})</pre>
+        </code>
+      </div>
+      <div class="description">
+        <p>dictionary adds global errorMessages and error message can be string or function returning string.
+          <br/>is able to pass multiple messages as an object</p>
+        <dl class="depth1">
+          <dt><span class="param-name">name</span><span class="param-type">string</span><span
+            class="sym-required"></span></dt>
+          <dd>the name of the message(same as rules)</dd>
+          <dt><span class="param-name">errMessage</span><span class="param-type">function: string || string</span><span
+            class="sym-required"></span></dt>
+          <dd>The error message to be shown when error occurred or function returns that error message</dd>
+        </dl>
+      </div>
+
+    </article>
+  </section>
+  <section>
+    <h2>$vv.isValidAll</h2>
+    <article>
+      <div class="code">
+        <code>
+          <pre class="prettyprint lang-js">
+var a = $vv.init(...)
+var b = $vv.init(...)
+var btn = document.querySelector('button')
+
+btn.addEventListener('click',function(){
+  if($vv.isValidAll(a,b)) {
+    ...
   }
-</script>
+}, false)
+</pre>
+        </code>
+      </div>
+      <div class="description">
+        <p>isValidAll doesn't provoke error messages <br/>
+          it simply returns the value in form of boolean</p>
+        <dl class="depth1">
+          <dt><span class="param-name">parameters</span><span class="param-type">Validator Instances</span><span
+            class="sym-required"></span></dt>
+          <dd>Validator instance to validate together</dd>
+          <dt><span class="param-name">return</span><span class="param-type">boolean</span><span
+            class="sym-required"></span></dt>
+          <dd>simply return true or false</dd>
+        </dl>
+      </div>
+
+    </article>
+  </section>
+  <section>
+    <h2>$vv.validateAll</h2>
+    <article>
+      <div class="code">
+        <code>
+          <pre class="prettyprint lang-js">
+var a = $vv.init(...)
+var b = $vv.init(...)
+var btn = document.querySelector('button')
+
+btn.addEventListener('click',function(){
+  var valid = $vv.validateAll(a,b)
+  // return true if no error found from the group, array of erred Validator instance if error found in case need some ui mutation
+  // so use '===' instead of  '==' to check its validity
+
+  if( valid === true ) {
+   ...
+  } else {
+   ...
+  }
+}, false)
+</pre>
+        </code>
+      </div>
+      <div class="description">
+        <p>it provokes all the error messages regardless its dirty or touched status</p>
+        <dl class="depth1">
+          <dt><span class="param-name">parameters</span><span class="param-type">Validator Instances</span><span
+            class="sym-required"></span></dt>
+          <dd>Validator instance to validate together</dd>
+          <dt><span class="param-name">return</span><span class="param-type">Boolean(true) || Array</span><span
+            class="sym-required"></span></dt>
+          <dd>
+            returned value from validateAll is a bit tricky<br/>
+            return true if no error found from the group, array of erred Validator instance if error found in case need
+            some ui mutation
+          </dd>
+        </dl>
+      </div>
+
+    </article>
+  </section>
+  <section>
+    <h2>$vv.observeAll</h2>
+    <article>
+      <div class="code">
+        <code>
+          <pre class="prettyprint lang-js">
+var a = $vv.init(...)
+var b = $vv.init(...)
+var btn = document.querySelector('button')
+
+$vv.observeAll(a,b, function(valid) {
+  if(valid) {
+    btn.classList.add('btn-red')
+  } else {
+    btn.classList.remove('btn-red')
+  }
+})
+</pre>
+        </code>
+      </div>
+      <div class="description">
+        <p>observeAll does reactive work to its validator instances' value<br/>
+          take one function to call when value changes, <br/>
+          can be used for UI mutation</p>
+        <dl class="depth1">
+          <dt><span class="param-name">parameters</span><span class="param-type">Validator Instances</span><span
+            class="sym-required"></span></dt>
+          <dd>Validator instance to validate together</dd>
+          <dt><span class="param-name">return</span><span class="param-type">boolean</span><span
+            class="sym-required"></span></dt>
+          <dd>return true for all valid, false for other cases</dd>
+        </dl>
+      </div>
+
+    </article>
+  </section>
+  <section>
+    <h2>$vv.config</h2>
+    <article>
+      <div class="code">
+        <code>
+          <pre class="prettyprint lang-js">
+//default config object
+default = {
+    boxClass: 'msg-box', // msg-box class, no padding, no styling should be applied
+    msgClass: 'msg-box-msg', // div inside msg-box
+    errorClass: 'is-error',
+    addClass: true,
+    waiver: 'dirty',
+    event: 'change',
+    //_config.countBlank:false => uncount errors(except required) when string is ''
+    getDefaultMsg: function (rule) {
+      return rule + ' : entered wrong'
+    },
+    display: function (errors) {
+    // override function to display error message
+
+    }
+  }
+ $vv.config({event:'input',countBlank:true....})
+</pre>
+        </code>
+      </div>
+      <div class="description">
+        <dl class="depth1">
+          <dt><span class="param-name">boxClass</span><span class="param-type">string</span></dt>
+          <dd>className for wrapper of message box</dd>
+          <dt><span class="param-name">msgClass</span><span class="param-type">string</span></dt>
+          <dd>className for the Validator.$msgBox</dd>
+          <dt><span class="param-name">errorClass</span><span class="param-type">string</span></dt>
+          <dd>className for the Validator.$el when error occurred</dd>
+          <dt><span class="param-name">addClass</span><span class="param-type">boolean</span></dt>
+          <dd>whether to add errorClass or not</dd>
+          <dt><span class="param-name">waiver</span><span class="param-type">string</span></dt>
+          <dd>option is 'dirty' or 'touched'<br/>
+            'dirty' for not showing error message before key(text input) or mousedown(not text input) event<br/>
+            'touched' for focus event
+          </dd>
+          <dt><span class="param-name">event</span><span class="param-type">string</span></dt>
+          <dd>change validate event for all Validator to be created</dd>
+          <dt><span class="param-name">display</span><span class="param-type">function</span></dt>
+          <dd>change display function for all validator to be created
+            <dl class="depth2">
+              <dt><span class="param-name">errors</span><span class="param-type">Array</span></dt>
+              <dd>errors object<br/>
+                error[0]: rulename<br/>
+                error[1]: error message<br/>
+                [](empty array) for no errors
+              </dd>
+            </dl>
+          </dd>
+        </dl>
+      </div>
+
+    </article>
+  </section>
+  <section>
+    <h2>Validator constructor</h2>
+    <article>
+      <div class="description">
+        <h3>Properties</h3>
+        <dl class="depth1" style="margin-bottom: 50px">
+          <dt><span class="param-name">Validator.$el</span><span class="param-type">element</span></dt>
+          <dd>Element object to be validated(only input and select)</dd>
+          <dt><span class="param-name">Validator.$msgBox</span><span class="param-type">element</span></dt>
+          <dd>Element object to display error message</dd>
+          <dt><span class="param-name">Validator.dirty</span><span class="param-type">boolean</span></dt>
+          <dd><span class="fc-strong">mousedown</span> for checkbox, radio, range, <span class="fc-strong">input</span>
+            for the rest<br/>
+            true for the case event has been occurred and false for the other
+          </dd>
+          <dt><span class="param-name">Validator.touched</span><span class="param-type">boolean</span></dt>
+          <dd><span class="fc-strong">focus</span><br/>
+            true for the case event has been occurred and false for the other
+          </dd>
+          <dt><span class="param-name">Validator.pure</span><span class="param-type">boolean</span></dt>
+          <dd>opposite of dirty</dd>
+          <dt><span class="param-name">Validator.untouched</span><span class="param-type">boolean</span></dt>
+          <dd>opposite of touched</dd>
+          <dt><span class="param-name">Validator.failed</span><span class="param-type">boolean</span></dt>
+          <dd>error happened</dd>
+          <dt><span class="param-name">Validator.success</span><span class="param-type">boolean</span></dt>
+          <dd>passed all rules</dd>
+          <dt><span class="param-name">Validator.extra</span><span class="param-type">&lt;any&gt;</span></dt>
+          <dd>Array of the arguments[2] to [end] added when init method called</dd>
+        </dl>
+        <h3>Methods</h3>
+        <dl class="depth1">
+          <dt><span class="param-name">Validator.setValue</span><span class="param-type">function:void</span></dt>
+          <dd>set Value to the Element and run the validate method
+            <dl class="depth2">
+              <dt>value<span class="param-type">any</span></dt>
+              <dd>value to change</dd>
+            </dl>
+          </dd>
+          <dt><span class="param-name">Validator.addRule</span><span class="param-type">function:void</span></dt>
+          <dd>add a rulename to apply to Validator instance
+            <dl class="depth2">
+              <dt>rulename<span class="param-type">string</span></dt>
+              <dd>rule to add to the instance(not recommend to use)</dd>
+            </dl>
+          </dd>
+          <dt><span class="param-name">Validator.removeRule</span><span class="param-type">function:void</span></dt>
+          <dd>remove a rulename to apply to Validator instance
+            <dl class="depth2">
+              <dt>rulename<span class="param-type">string</span></dt>
+              <dd>rule to remove from the instance(not recommend to use)</dd>
+            </dl>
+          </dd>
+          <dt><span class="param-name">Validator.showMessage</span><span class="param-type">function:void</span></dt>
+          <dd>receive string(error message) and display it to msgbox
+            <dl class="depth2">
+              <dt>message<span class="param-type">string</span></dt>
+              <dd>message to display at error box</dd>
+            </dl>
+          </dd>
+          <dt><span class="param-name">Validator.showMsgBox</span><span class="param-type">function:void</span></dt>
+          <dd>display block to Validator.$msgBox</dd>
+          <dt><span class="param-name">Validator.hideMsgBox</span><span class="param-type">function:void</span></dt>
+          <dd>display none to Validator.$msgBox</dd>
+          <dt><span class="param-name">Validator.remove</span><span class="param-type">function:void</span></dt>
+          <dd>remove Validator instance and eventlisteners</dd>
+        </dl>
+      </div>
+    </article>
+  </section>
+  <script src="https://cdn.rawgit.com/google/code-prettify/master/loader/run_prettify.js"></script>
+  <script src="./index.js"></script>
+  <script>
+    window.onload = function () {
+      ONLOAD.forEach(function (fn) {
+        fn();
+      })
+    }
+  </script>
+</div>
 </body>
 </html>

@@ -8,6 +8,9 @@ h1 {
 h2::before {
   content: '-'
 }
+h2 {
+  margin: 80px 0 30px;
+}
 dl, dt, dd, ul, li, p {
   margin: 0;
   padding: 0;
@@ -15,6 +18,10 @@ dl, dt, dd, ul, li, p {
 article {
   background-color: #f4f4f4;
   padding: 20px;
+}
+.wrapper {
+  max-width: 1000px;
+  margin: 0 auto;
 }
 .description {
 
