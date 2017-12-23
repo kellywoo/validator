@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <title>msgbox</title>
+  <link rel="stylesheet" href="./app.css">
   <script>
     var ONLOAD = [];
 
@@ -66,7 +67,6 @@
       })
     })
   </script>
-  <link rel="stylesheet" href="./app.css">
 </head>
 <body>
 <div class="wrapper">
@@ -112,6 +112,10 @@
             <span class="input-label">maxNum(set to 10)</span>
             <p><input type="number" class="ex0-g"></p>
           </label>
+          <p class="fn-addition" style="margin-top:5px">reset methods resets dirty and touched as well</p>
+          <div style="text-align: center;padding: 30px 0 0">
+            <button type="button" class="reset-button btn-green">ResetAll Button</button>
+          </div>
           <script>
             ONLOAD.push(function () {
               var a = $vv.init('.ex0-a', {
@@ -135,6 +139,9 @@
               })
               var g = $vv.init('.ex0-g', {
                 rules: [ { maxNum: 10 } ]
+              })
+              document.querySelector('.reset-button').addEventListener('click',function(){
+                $vv.resetAll(a,b,c,d,e,f,g)
               })
             })
           </script>
@@ -996,7 +1003,7 @@ default = {
     boxClass: 'msg-box', // msg-box class, no padding, no styling should be applied
     msgClass: 'msg-box-msg', // div inside msg-box
     errorClass: 'is-error',
-    addClass: true,
+    interval: 500,
     waiver: 'dirty',
     event: 'change',
     //_config.countBlank:false => uncount errors(except required) when string is ''
@@ -1020,8 +1027,8 @@ default = {
           <dd>className for the Validator.$msgBox</dd>
           <dt><span class="param-name">errorClass</span><span class="param-type">string</span></dt>
           <dd>className for the Validator.$el when error occurred</dd>
-          <dt><span class="param-name">addClass</span><span class="param-type">boolean</span></dt>
-          <dd>whether to add errorClass or not</dd>
+          <dt><span class="param-name">interval</span><span class="param-type">number</span></dt>
+          <dd>validation throttle time, default is 500</dd>
           <dt><span class="param-name">waiver</span><span class="param-type">string</span></dt>
           <dd>option is 'dirty' or 'touched'<br/>
             'dirty' for not showing error message before key(text input) or mousedown(not text input) event<br/>

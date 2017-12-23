@@ -1,6 +1,13 @@
-# validator
+# Validator
 
-## download script and include script or require
+> Form validation and displaying message
 
-API and Sample: <https://kellywoo.github.io/validator/>
+## Installation
+download index.js and include the file(support ie9 or above)
 
+## Usage
+visit sample page to check API and examples: <https://kellywoo.github.io/validator/>
+
+## License
+
+MIT © [kelly.kh.woo@gmail.com]()

@@ -12,6 +12,41 @@
   var slice = [].slice;
   var isArray = Array.isArray;
 
+  function throttle (callback, delay) {
+    var lastRun = 0;
+    var freeze = false;
+    var lastTimeTobe;
+    var setTimeTicking;
+
+    function wrapper () {
+      lastTimeTobe = Date.now();
+      if ( freeze || ( lastTimeTobe - lastRun) < delay ) {
+        return;
+      }
+      freeze = true;
+      lastRun = lastTimeTobe;
+      // if this is called before setTime is executed, remove it
+      // since we will set setTime again;
+      clearTimeout(setTimeTicking);
+      var run = function () {
+        callback();
+        freeze = false;
+      }
+
+      run();
+      // check if there has been events called since the last execution;
+      setTimeTicking=setTimeout(function () {
+        if(lastRun!==lastTimeTobe){
+          freeze = true;
+          run();
+        }
+      }, lastRun + delay - lastTimeTobe);
+
+    }
+
+    return wrapper
+  }
+
   var _config = {
     boxClass: 'msg-box', //msg-box class, no padding, no
     msgClass: 'msg-box-msg', //msg-box
@@ -19,6 +54,7 @@
     addClass: true,
     waiver: 'dirty',
     event: 'input',
+    interval: 500,
     getDefaultMsg: function (rule) {
       return rule + ' : entered wrong'
     },
@@ -60,7 +96,7 @@
 
   var _vRule = {
     email: function (value) {
-      return /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$/.test(value);
+      return /^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+\.(?:[a-zA-Z0-9-]+)$/.test(value);
     },
     required: function (value) {
       if ( isBoolean(value) ) {
@@ -134,6 +170,7 @@
     }
     return is;
   }
+
   function isNumber (n) {
     // n===n is for NaN
     return typeof n === 'number' && n === n;
@@ -232,7 +269,12 @@
 
     // if wrong value entered
     if ( _config.waiver !== 'dirty' && _config.waiver !== 'touched' ) {
+      warn('The config value is not valid: waiver should be either dirty or touched. default(dirty) is applying')
       _config.waiver = 'dirty'
+    }
+    if (!isNumber(_config.interval)) {
+      warn('The config value is not valid: interval should be number. default(500) is applying')
+      _config.interval = 500;
     }
   }
 
@@ -298,7 +340,7 @@
           checked = v;
         }
         return false;
-      }).length ? void(0) :checked.checked = false;
+      }).length ? void(0) : checked.checked = false;
 
     } else if ( this.type === 'select' ) {
       var options = [].slice.call(self.$el.querySelectorAll('option'));
@@ -308,7 +350,7 @@
         self.$el.value = options[ 0 ].value;
       }
     } else if ( isCheckBox(self.type) ) {
-      if(value === 'true' || value === 'false' ) {
+      if ( value === 'true' || value === 'false' ) {
         value = Boolean(value)
       }
       self.$el.checked = !!value;
@@ -337,6 +379,7 @@
   }
 
   function loop (evt, e) {
+    console.log('looping');
     var handler = _handlers[ this.id ].handlers[ evt ];
     handler.forEach(function (fn) {
       fn.call(this, e)
@@ -502,14 +545,13 @@
     // attach looping event to Element
     if ( this.$groups ) {
       for ( var evt in eventHandlers ) {
-
         eventRemovers = eventRemovers.concat(this.$groups.map(function (el) {
-          return attachEventUtil(el, evt, loop.bind(this, evt))
+          return attachEventUtil(el, evt, throttle(loop.bind(this, evt), _config.interval))
         }, this))
       }
     } else {
       for ( var evt in eventHandlers ) {
-        eventRemovers.push(attachEventUtil(this.$el, evt, loop.bind(this, evt)))
+        eventRemovers.push(attachEventUtil(this.$el, evt, throttle(loop.bind(this, evt),  _config.interval)))
       }
     }
     return this;
@@ -531,10 +573,10 @@
       return;
     }
     if ( !str ) {
-      this.$el.classList.remove(_config.errorClass)
+      _config.errorClass && this.$el.classList.remove(_config.errorClass)
       this.hideMsgBox();
     } else {
-      this.$el.classList.add(_config.errorClass)
+      _config.errorClass && this.$el.classList.add(_config.errorClass)
       this.$msgBox.innerHTML = str;
       this.showMsgBox();
     }
@@ -551,7 +593,7 @@
       sortRequiredFirst(this.rules);
     }
   }
- // user purposely remove all the rules, it's their choice, don't block it
+  // user purposely remove all the rules, it's their choice, don't block it
   Validator.prototype.removeRule = function (rule) {
     if ( isString(rule) ) {
       if ( this.rules.hasOwnProperty(rule) ) {
@@ -573,14 +615,7 @@
     delete _handlers[ id ];
     delete _errors[ id ];
     delete _observeObj[ id ];
-    this.$msgBox.innerHTML = '';
-
-    // remove link to properties defined by defineProperty
-    [ 'pure', 'untouched', 'failed', 'valid' ].forEach(
-      function (p) {
-        removeDefine(this, p)
-      }, this
-    )
+    this.hideMsgBox();
 
     for ( var key in this ) {
       if ( this.hasOwnProperty(key) ) {
@@ -597,23 +632,28 @@
     changeValue(this, '');
     this.dirty = false;
     this.touched = false;
-    _getErrors.call(this)
+    this.validate();
   }
+  Validator.prototype.getErrors = function () {
 
+  }
   // validation for multiple targets
   function validateAll () {
     var a = slice.call(arguments).filter(function (obj) {
-      if ( isValidatorObj(obj) && !obj.validate(true)) {
+      if ( isValidatorObj(obj) && !obj.validate(true) ) {
         return true;
       }
       return false;
     })
-    return a.length === 0? true : a;
+    return a.length === 0 ? true : a;
   }
 
   function resetAll () {
     slice.call(arguments).forEach(function (obj) {
-      obj.reset();
+      // if element has been removed or validator.removed has been called;
+      if ( obj.$el ) {
+        obj.reset();
+      }
     })
   }
 
@@ -705,6 +745,37 @@
     }
   }
 
+  Object.defineProperties(Validator.prototype, {
+    'pure': {
+      get: function () {
+        return !this.dirty
+      },
+      configurable: true,
+      enumerable: true
+    },
+    'untouched': {
+      get: function () {
+        return !this.touched
+      },
+      configurable: true,
+      enumerable: true
+    },
+    'failed': {
+      get: function () {
+        return !_truthy[ this.id ];
+      },
+      configurable: true,
+      enumerable: true
+    },
+    'valid': {
+      get: function () {
+        return _truthy[ this.id ];
+      },
+      configurable: true,
+      enumerable: true
+    }
+  })
+
   // return Validator Object
   function init (_elem, _option, ext) {
     if ( !(_elem && _option) ) {
@@ -736,38 +807,7 @@
     rules = sortRequiredFirst(rules);
 
 
-    var $v = new Validator(elem, rules, evt, _option.formatter, _option.display, msgBox, args);
-    Object.defineProperties($v, {
-      'pure': {
-        get: function () {
-          return !this.dirty
-        },
-        configurable: true,
-        enumerable: true
-      },
-      'untouched': {
-        get: function () {
-          return !this.touched
-        },
-        configurable: true,
-        enumerable: true
-      },
-      'failed': {
-        get: function () {
-          return !_truthy[ this.id ];
-        },
-        configurable: true,
-        enumerable: true
-      },
-      'valid': {
-        get: function () {
-          return _truthy[ this.id ];
-        },
-        configurable: true,
-        enumerable: true
-      }
-    })
-    return $v;
+    return new Validator(elem, rules, evt, _option.formatter, _option.display, msgBox, args);
   }
 
   return {

@@ -227,3 +227,9 @@ input[type=radio] {
 .examples .sym-required::before {
   content: '*';
 }
+.fn-addition::before {
+  content: '* '
+}
+.fn-addition {
+  color: #587c9a;
+}
