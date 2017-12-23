@@ -379,7 +379,6 @@
   }
 
   function loop (evt, e) {
-    console.log('looping');
     var handler = _handlers[ this.id ].handlers[ evt ];
     handler.forEach(function (fn) {
       fn.call(this, e)
