@@ -19,6 +19,7 @@
     var setTimeTicking;
 
     function wrapper () {
+      var $this = this;
       lastTimeTobe = Date.now();
       if ( freeze || ( lastTimeTobe - lastRun) < delay ) {
         return;
@@ -29,14 +30,14 @@
       // since we will set setTime again;
       clearTimeout(setTimeTicking);
       var run = function () {
-        callback();
+        callback.apply($this, arguments);
         freeze = false;
       }
 
       run();
       // check if there has been events called since the last execution;
-      setTimeTicking=setTimeout(function () {
-        if(lastRun!==lastTimeTobe){
+      setTimeTicking = setTimeout(function () {
+        if ( lastRun !== lastTimeTobe ) {
           freeze = true;
           run();
         }
@@ -115,18 +116,10 @@
       return /^\d+$/.test(value);
     },
     minLen: function (value, minLen) {
-      if ( isNumber(minLen) ) {
-        return value.length >= minLen;
-      } else {
-        return true;
-      }
+      return value.toString().length >= minLen;
     },
     maxLen: function (value, maxLen) {
-      if ( isNumber(maxLen) ) {
-        return value.length <= maxLen;
-      } else {
-        return true;
-      }
+      return value.toString().length <= maxLen;
     },
     minNum: function (value, minNum) {
       return parseFloat(_refineValue.toIntStr(value)) >= minNum;
@@ -137,9 +130,6 @@
   };
 
   var _refineValue = {
-    toNumbers: function (v) {
-      return parseFloat(_refineValue.toDigits(v));
-    },
     toIntStr: function (v) {
       return v.toString().replace(/\D/g, '') || 0;
     },
@@ -155,6 +145,7 @@
   var _handlers = {};
   var _errors = {};
   var _truthy = {};
+  var _values = {};
   var _observeObj = {};
   var _prevMessage = {}
   var _validateEvent = {};
@@ -255,10 +246,10 @@
 
   function formatterEvent (handler, markDirty, formatter) {
     handler = handler || [];
-    if ( !formatter || formatter === noop ) {
-      handler.unshift(markDirty);
-    } else {
+    if ( formatter ) {
       handler.unshift(markDirty, formatter);
+    } else {
+      handler.unshift(markDirty);
     }
     return handler;
   }
@@ -272,7 +263,7 @@
       warn('The config value is not valid: waiver should be either dirty or touched. default(dirty) is applying')
       _config.waiver = 'dirty'
     }
-    if (!isNumber(_config.interval)) {
+    if ( !isNumber(_config.interval) ) {
       warn('The config value is not valid: interval should be number. default(500) is applying')
       _config.interval = 500;
     }
@@ -419,8 +410,7 @@
     // event object when it called from event and flag when it called by validateAll
     // get temp value from input;
     // radio and checkbox, if not defined value it returns 'on' select returns text of option selected;
-    var value = getValue(this);
-
+    var value = _values[ this.id ] = this.refineValue(getValue(this));
     //is radio we check which is checked and if one is checked switch $el with that element
 
     _errors[ this.id ] = Object.keys(this.rules).filter(function (rule) {
@@ -453,7 +443,7 @@
   }
 
   // **constructor
-  function Validator (elem, rules, ev, formatter, display, msgBox, extra) {
+  function Validator (elem, rules, ev, formatter, refineValue, display, msgBox, extra) {
 
     // id
     var id = this.id = ++_id;
@@ -468,7 +458,6 @@
       warn('Validator doesn\'t support this type of form fileld.')
       return;
     }
-
     //in case of radio you can't be tie to one element, you should check every radio element which has same name property
     if ( isRadio(this.type) ) {
       //only radio button has $groups property
@@ -481,8 +470,11 @@
 
     var _formatter = isFunction(formatter) ? function () {
       changeValue(this, formatter(getValue(this)))
-    } : noop;
+    } : null;
 
+    this.refineValue = isFunction(refineValue) ? refineValue : function (value) {
+      return value
+    };
     // any arguments passed by init, can be used in error checking function
     this.extra = extra;
 
@@ -503,7 +495,7 @@
     //this.value = ''; don't use it yet
     // rules to apply
     this.rules = rules;
-
+    _values[ id ] = '';
     // confirm reactive;
     var confirmTarget = rules.confirm;
     if ( confirmTarget && isValidatorObj(confirmTarget) ) {
@@ -534,23 +526,23 @@
 
     // radio, checkbox, select and range don't need key event but text or similar inputs do
     if ( isNoKeyType(this.type) ) {
-      eventHandlers.change = [ _validate ];
+      eventHandlers.change = [ throttle(_validate, _config.interval) ];
       eventHandlers.mousedown = formatterEvent(eventHandlers.mousedown, markDirty)
     } else {
-      eventHandlers[ ev ] = [ _validate ];
+      eventHandlers[ ev ] = [ throttle(_validate, _config.interval) ];
       eventHandlers.input = formatterEvent(eventHandlers.input, markDirty, _formatter)
     }
 
     // attach looping event to Element
     if ( this.$groups ) {
       for ( var evt in eventHandlers ) {
-        eventRemovers = eventRemovers.concat(this.$groups.map(function (el) {
-          return attachEventUtil(el, evt, throttle(loop.bind(this, evt), _config.interval))
+        eventObj[ 'removers' ] = eventObj[ 'removers' ].concat(this.$groups.map(function (el) {
+          return attachEventUtil(el, evt, loop.bind(this, evt))
         }, this))
       }
     } else {
       for ( var evt in eventHandlers ) {
-        eventRemovers.push(attachEventUtil(this.$el, evt, throttle(loop.bind(this, evt),  _config.interval)))
+        eventRemovers.push(attachEventUtil(this.$el, evt, loop.bind(this, evt)))
       }
     }
     return this;
@@ -572,16 +564,19 @@
       return;
     }
     if ( !str ) {
-      _config.errorClass && this.$el.classList.remove(_config.errorClass)
+      _config.errorClass && this.$el.classList.remove(_config.errorClass);
       this.hideMsgBox();
     } else {
-      _config.errorClass && this.$el.classList.add(_config.errorClass)
+      _config.errorClass && this.$el.classList.add(_config.errorClass);
       this.$msgBox.innerHTML = str;
       this.showMsgBox();
     }
     _prevMessage[ this.id ] = str;
   }
 
+  Validator.prototype.getValue = function () {
+    return _values[ this.id ];
+  }
   // rules
   Validator.prototype.addRule = function (rule) {
     if ( isString(rule) && isUndef(this.rules[ rule ]) ) {
@@ -609,11 +604,17 @@
 
     // if observeAll is connected to this Validator it can occur an error
     // leave truthy as true to prevent it;
-    _truthy[ id ] = true;
-
+    delete _truthy[ id ];
     delete _handlers[ id ];
     delete _errors[ id ];
     delete _observeObj[ id ];
+    delete _values[ id ];
+    var sub = Object.keys(_subscribe);
+    for ( var i = 0; i < sub.length; i++ ) {
+      _subscribe[ sub[ i ] ].targets = _subscribe[ sub[ i ] ].targets.filter(function (v) {
+        return v !== this
+      }, this)
+    }
     this.hideMsgBox();
 
     for ( var key in this ) {
@@ -633,18 +634,17 @@
     this.touched = false;
     this.validate();
   }
-  Validator.prototype.getErrors = function () {
-
-  }
   // validation for multiple targets
   function validateAll () {
-    var a = slice.call(arguments).filter(function (obj) {
+    var args = slice.call(arguments);
+    var a = args.filter(function (obj) {
       if ( isValidatorObj(obj) && !obj.validate(true) ) {
         return true;
       }
       return false;
     })
-    return a.length === 0 ? true : a;
+    return a.length === 0 ? { fail: false, success: true, fields: args }
+      : { fail: true, success: false, fields: args, failedFields: a };
   }
 
   function resetAll () {
@@ -673,17 +673,31 @@
       warn('observeAll needs a callback function');
       return false;
     }
-    _subscribe[ id ] = function () {
-      var bool = args.some(function (_obj) {
-        return !_obj.valid;
-      })
-      callback.apply(null, [ !bool ].concat(args));
+    _subscribe[ id ] = {
+      fn: function () {
+        var $this = _subscribe[ id ];
+        if ( $this.targets ) {
+          var bool = $this.targets.some(function (_obj) {
+            return !_obj.valid;
+          })
+          callback.apply(null, [ !bool ].concat($this.targets));
+        }
+      },
+      targets: args,
     }
     args.forEach(function (obj) {
-      _observeObj[ obj.id ].push(function () {
-        _subscribe[ id ] && _subscribe[ id ]();
+      _observeObj[ obj.id ].push(_subscribe[ id ].fn)
+    })
+    return id;
+  }
+
+  function removeObserver (id) {
+    _subscribe[ id ].targets.forEach(function (obj) {
+      _observeObj[ obj.id ] = _observeObj[ obj.id ].filter(function (v) {
+        return v !== _subscribe[ id ].fn
       })
     })
+    delete _subscribe[ id ];
   }
 
   function isValidAll () {
@@ -804,9 +818,7 @@
     }
 
     rules = sortRequiredFirst(rules);
-
-
-    return new Validator(elem, rules, evt, _option.formatter, _option.display, msgBox, args);
+    return new Validator(elem, rules, evt, _option.formatter, _option.refineValue, _option.display, msgBox, args);
   }
 
   return {
@@ -817,6 +829,7 @@
     validateAll: validateAll,
     isValidAll: isValidAll,
     observeAll: observeAll,
-    resetAll: resetAll
+    resetAll: resetAll,
+    removeObserver: removeObserver
   }
 })

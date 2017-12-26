@@ -434,6 +434,79 @@ var a = $vv.init(document.querySelector('.ex2-b'), {
       </div>
 
     </div>
+
+    <div class="examples">
+      <h4>refineValue</h4>
+      <ul class="tab-button">
+        <li><a href="" class="btn-tab">DEMO</a></li>
+        <li><a href="" class="btn-tab">HTML</a></li>
+        <li><a href="" class="btn-tab">SCRIPT</a></li>
+      </ul>
+      <div class="tab-content">
+        <div>
+          <label class="input-row">
+            <span class="input-label">mobile number(number only,maxLen:11)</span>
+            <p><input type="text" class="ex4-a"></p>
+          </label>
+          <p class="fn-addition">refineValue removes -, so minlength calculates only numbers when it validates</p>
+          <div style="text-align: center;padding: 30px 0 0">
+            <button type="button" class="get-value-button btn-green">getValue</button>
+          </div>
+          <script>
+            ONLOAD.push(function () {
+              var a = $vv.init(document.querySelector('.ex4-a'), {
+                rules: [ 'numeric', {maxLen: 11}],
+                formatter: function(value){
+                  return value.replace(/[^0-9]/g,'').replace(/\B(?=\d{4}\b)/,'-')
+                    .replace(/\B(?=\d{4}-\d{4}\b)/,'-')
+                },
+                refineValue:function(value){
+                 return value.replace(/-/g,'');
+                }
+              });
+              var btn= document.querySelector('.get-value-button')
+              btn.addEventListener('click', function () {
+               alert('the value returned from refineValue : '+a.getValue());
+              })
+            })
+          </script>
+        </div>
+        <div>
+          <code>
+          <pre class="prettyprint lang-html">
+&lt;label class="input-row"&gt;
+  &lt;span class="input-label"&gt;mobile number(maxLen:11)&lt;/span&gt;
+  &lt;p&gt;&lt;input type="text" class="ex4-a"&gt;&lt;/p&gt;
+&lt;/label&gt;
+&lt;div style="text-align: center;padding: 30px 0 0"&gt;
+  &lt;button type="button" class="get-value-button btn-green"&gt;getValue&lt;/button&gt;
+&lt;/div&gt;
+          </pre>
+          </code>
+        </div>
+        <div>
+          <code>
+          <pre class="prettyprint lang-js">
+var a = $vv.init(document.querySelector('.ex4-a'), {
+  rules: [ 'numeric', {maxLen: 11}],
+  formatter: function(value){
+    return value.replace(/[^0-9]/g,'').replace(/\B(?=\d{4}\b)/,'-')
+      .replace(/\B(?=\d{4}-\d{4}\b)/,'-')
+  },
+  refineValue:function(value){
+   return value.replace(/-/g,'');
+  }
+});
+var btn= document.querySelector('.get-value-button')
+btn.addEventListener('click', function () {
+ alert('the value returned from refineValue : '+a.getValue());
+})
+          </pre>
+          </code>
+        </div>
+      </div>
+
+    </div>
     <div class="examples">
       <h4>validateAll observeAll</h4>
       <ul class="tab-button">
@@ -480,7 +553,6 @@ var a = $vv.init(document.querySelector('.ex2-b'), {
               var a = $vv.init('.a', {
                 rules: [ 'required' ],
                 formatter: function (value) {
-                  console.log(value);
                   // return value;
                 }
               });
@@ -497,7 +569,6 @@ var a = $vv.init(document.querySelector('.ex2-b'), {
               var d = $vv.init('.d', {
                 rules: [ 'required' ]
               })
-              console.log(d.valid)
               //reactive validate
 
               function suffice () {
@@ -514,9 +585,10 @@ var a = $vv.init(document.querySelector('.ex2-b'), {
               var btnObserve = document.querySelector('.observe-all');
               btnObserve.addEventListener('click', function () {
                 b.reset();
-                alert('unchecked radio button');
+                b.remove();
+                alert('all fields are validated and let\'s uncheck radio button');
               }, false)
-              $vv.observeAll(a, b, c, d, function (r, a, b, c, d) {
+              var a= $vv.observeAll(a, b, c, d, function (r, a, b, c, d) {
                 if ( r ) {
                   btnObserve.disabled = false;
                 } else {
@@ -524,18 +596,17 @@ var a = $vv.init(document.querySelector('.ex2-b'), {
                 }
               })
 
-
               //manual validate
               var btnValidate = document.querySelector('.validate-all');
-              btnValidate.addEventListener('click', validateForm, false)
               var isValidating = false;
+              btnValidate.addEventListener('click', validateForm, false)
 
               function validateForm (e) {
                 if ( isValidating ) {
                   return;
                 }
                 var valid = $vv.validateAll(a, b, c, d);
-                if ( valid === true ) {
+                if ( valid.success ) {
                   isValidating = true;
                   btnValidate.classList.add('btn-processing');
                   setTimeout(function () {
@@ -545,7 +616,7 @@ var a = $vv.init(document.querySelector('.ex2-b'), {
                     isValidating = false;
                   }, 2000)
                 } else {
-                  valid[ 0 ].$el.focus();
+                  valid.failedFields[ 0 ].$el.focus();
                 }
               }
             })
@@ -595,7 +666,6 @@ var a = $vv.init(document.querySelector('.ex2-b'), {
 var a = $vv.init('.a', {
   rules: [ 'required' ],
   formatter: function (value) {
-    console.log(value);
     // return value;
   }
 });
@@ -633,7 +703,6 @@ btnObserve.addEventListener('click',function () {
 }, false);
 
 $vv.observeAll(a, b, c, d, function (r, a, b, c, d) {
-  console.log(arguments);
   if ( r ) {
     btnObserve.disabled = false;
   } else {
@@ -644,15 +713,15 @@ $vv.observeAll(a, b, c, d, function (r, a, b, c, d) {
 
 //manual validate
 var btnValidate = document.querySelector('.validate-all');
-btnValidate.addEventListener('click', validateForm, false)
 var isValidating = false;
+btnValidate.addEventListener('click', validateForm, false)
 
 function validateForm (e) {
   if ( isValidating ) {
     return;
   }
   var valid = $vv.validateAll(a, b, c, d);
-  if ( valid === true ) {
+  if ( valid.success ) {
     isValidating = true;
     btnValidate.classList.add('btn-processing');
     setTimeout(function () {
@@ -662,7 +731,7 @@ function validateForm (e) {
       isValidating = false;
     }, 2000)
   } else {
-    valid[ 0 ].$el.focus();
+    valid.failedFields[ 0 ].$el.focus();
   }
 }
           </pre>
@@ -711,6 +780,8 @@ const $vv = require('path_to_$vv')
       // this refers to Validator Object
     },
     formatter: function(value) {
+    },
+    refineValue: function(value) {
     },
     event: 'change'
   });</pre>
@@ -762,12 +833,11 @@ const $vv = require('path_to_$vv')
                   </dd>
                 </dl>
               </dd>
-              <dt><span class="param-name">formatter</span><span class="param-type">function:string</span><span
+              <dt><span class="param-name">formatter</span><span class="param-type">function:void</span><span
                 class="sym-optional"></span></dt>
               <dd>
-                change value and apply to DOM, input events bound for texting input and mousedown for radio,
-                checkbox, range, select<br/>
-                it runs before validating rules<br/>
+                change value and apply to the DOM Element, input events bound for 'texting' input only which means radio, checkbox, range, select can't set formatter.<br/>
+                it runs before validating rules and should return value.<br/>
                 ex) 1234 => 1,234
                 <dl class="depth2">
                   <dt><span class="param-name">value</span><span class="param-type">string || number || boolean </span>
@@ -776,6 +846,12 @@ const $vv = require('path_to_$vv')
                     boolean for checkbox, string for the reset
                   </dd>
                 </dl>
+              </dd>
+              <dt><span class="param-name">refineValue</span><span class="param-type">function:string</span><span
+                class="sym-optional"></span></dt>
+              <dd>
+                mutate the element's value for validating.
+                like dom has value of '1,234' which is string, but validating value should be number of 1234, it can be helpful. If refine Value is set Validate method receives value returned from refineValue function. should return proper value.
               </dd>
               <dt><span class="param-name">event</span><span class="param-type">string</span><span
                 class="sym-optional"></span></dt>
@@ -926,10 +1002,8 @@ var btn = document.querySelector('button')
 
 btn.addEventListener('click',function(){
   var valid = $vv.validateAll(a,b)
-  // return true if no error found from the group, array of erred Validator instance if error found in case need some ui mutation
-  // so use '===' instead of  '==' to check its validity
 
-  if( valid === true ) {
+  if( valid.success) {
    ...
   } else {
    ...
@@ -944,12 +1018,12 @@ btn.addEventListener('click',function(){
           <dt><span class="param-name">parameters</span><span class="param-type">Validator Instances</span><span
             class="sym-required"></span></dt>
           <dd>Validator instance to validate together</dd>
-          <dt><span class="param-name">return</span><span class="param-type">Boolean(true) || Array</span><span
-            class="sym-required"></span></dt>
+          <dt><span class="param-name">return</span><span class="param-type">Object</span></dt>
           <dd>
-            returned value from validateAll is a bit tricky<br/>
-            return true if no error found from the group, array of erred Validator instance if error found in case need
-            some ui mutation
+            success(boolean): all field has been validated<br />
+            fail(boolean): some field hasn't been validated<br />
+            fields(array): Validator Array passed in<br />
+            failedFields(array): Validator object that failed(for success, it is undefined)<br />
           </dd>
         </dl>
       </div>
@@ -984,8 +1058,7 @@ $vv.observeAll(a,b, function(valid) {
           <dt><span class="param-name">parameters</span><span class="param-type">Validator Instances</span><span
             class="sym-required"></span></dt>
           <dd>Validator instance to validate together</dd>
-          <dt><span class="param-name">return</span><span class="param-type">boolean</span><span
-            class="sym-required"></span></dt>
+          <dt><span class="param-name">return</span><span class="param-type">boolean</span></dt>
           <dd>return true for all valid, false for other cases</dd>
         </dl>
       </div>
@@ -1079,8 +1152,7 @@ default = {
           <dd>error happened</dd>
           <dt><span class="param-name">Validator.success</span><span class="param-type">boolean</span></dt>
           <dd>passed all rules</dd>
-          <dt><span class="param-name">Validator.extra</span><span class="param-type">&lt;any&gt;</span></dt>
-          <dd>Array of the arguments[2] to [end] added when init method called</dd>
+
         </dl>
         <h3>Methods</h3>
         <dl class="depth1">
@@ -1090,6 +1162,10 @@ default = {
               <dt>value<span class="param-type">any</span></dt>
               <dd>value to change</dd>
             </dl>
+          </dd>
+          <dt><span class="param-name">Validator.getValue</span><span class="param-type">any</span></dt>
+          <dd>value of form element returned from refineValue
+            It can be differed from element's value by what refineValue function returns;
           </dd>
           <dt><span class="param-name">Validator.addRule</span><span class="param-type">function:void</span></dt>
           <dd>add a rulename to apply to Validator instance
@@ -1118,6 +1194,7 @@ default = {
           <dd>display none to Validator.$msgBox</dd>
           <dt><span class="param-name">Validator.remove</span><span class="param-type">function:void</span></dt>
           <dd>remove Validator instance and eventlisteners</dd>
+
         </dl>
       </div>
     </article>
